@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>GASデータ送信</title>
+</head>
+<body>
+  <h2>データ送信フォーム</h2>
+  
+  <form id="dataForm">
+    <label>名前: <input type="text" id="name" required></label><br><br>
+    <label>メッセージ: <textarea id="message" required></textarea></label><br><br>
+    <button type="submit">スプレッドシートに送信</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    // ★ご自身のGAS WebアプリURLに置き換えてください
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+
+    document.getElementById('dataForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = '送信中...';
+
+      const payload = {
+        name: document.getElementById('name').value,
+        message: document.getElementById('message').value
+      };
+
+      try {
+        // GASへPOSTリクエストを送信
+        // mode: 'cors' または text/plain の指定によりCORSエラーを回避します
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8', 
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          statusEl.textContent = 'スプレッドシートへの書き込みが完了しました！';
+          document.getElementById('dataForm').reset();
+        } else {
+          statusEl.textContent = 'エラーが発生しました: ' + result.message;
+        }
+
+      } catch (error) {
+        console.error('Fetch Error:', error);
+        statusEl.textContent = '通信エラーが発生しました。';
+      }
+    });
+  </script>
+</body>
+</html>
